@@ -5,7 +5,7 @@ def aggregate_course_info(prereqs, course_details):
     spaced_course_code = f'{course_details["subj"]} {course_details["crse"]}' # e.g. ADMN 0001
     return {
         **course_details,
-        'prereqs': prereqs.get(spaced_course_code, {'prereqs': []})['prereqs'],
+        'prereqs': list(map(lambda code: code.replace(' ', '-'), prereqs.get(spaced_course_code, {'prereqs': []})['prereqs'])),
     }
 
 if __name__ == '__main__':
