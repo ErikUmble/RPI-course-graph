@@ -1,18 +1,38 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import cytoscape from "cytoscape";
+import fcose from "cytoscape-fcose";
+import courseData from "../data/aggregated.json";
+
+cytoscape.use(fcose);
 
 const cyContainer = ref(null);
 
 onMounted(() => {
+
+  const courses = Object.keys(courseData).map((courseId) => ({
+    data: { id: courseId, label: courseId },
+  }));
+
+  const prereqs = Object.entries(courseData).map(([course, info]) =>
+    info.prereqs.filter(
+      (prereq) => Object.keys(courseData).includes(prereq)
+    ).map(prereq => ({
+      data: {
+        id: `${prereq}->${course}`,
+        source: prereq,
+        target: course
+      }
+    }))
+  ).flat();
+
+  console.log(courses);
+  console.log(prereqs);
+
   const cy = cytoscape({
     container: cyContainer.value, // the DOM element
 
-    elements: [
-      { data: { id: "a" } },
-      { data: { id: "b" } },
-      { data: { id: "ab", source: "a", target: "b" } },
-    ],
+    elements: [...courses, ...prereqs],
 
     style: [
       {
@@ -23,6 +43,8 @@ onMounted(() => {
           color: "white",
           "text-valign": "center",
           "text-halign": "center",
+          width: 80,
+          height: 80,
         },
       },
       {
@@ -36,12 +58,13 @@ onMounted(() => {
         },
       },
     ],
-
-    layout: {
-      name: "grid",
-      rows: 1,
-    },
   });
+  const layoutOptions = {
+    name: "fcose",
+    nodeRepulsion: 10000,
+    idealEdgeLength: 100,
+  };
+  cy.layout(layoutOptions).run();
 });
 </script>
 
